@@ -22,6 +22,21 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
-        \App\Models\Post::factory(10)->create();
+        // \App\Models\Post::factory(10)->create();
+        // \App\Models\Product::factory(15)->create();
+
+        // 1. Создаем 4 базовые категории
+        $categories = [
+            \App\Models\Category::create(['name' => 'Электроника', 'slug' => 'electronics']),
+            \App\Models\Category::create(['name' => 'Одежда', 'slug' => 'clothes']),
+            \App\Models\Category::create(['name' => 'Книги', 'slug' => 'books']),
+        ];
+
+        // 2. Для каждой категории генерируем по 5 случайных товаров через фабрику
+        foreach ($categories as $category) {
+            \App\Models\Product::factory(5)->create([
+                'category_id' => $category->id // Принудительно задаем ID созданной категории
+            ]);
+        }
     }
 }
