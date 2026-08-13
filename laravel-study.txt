@@ -6,31 +6,29 @@
    - Фреймворк: Laravel (актуальная версия)
    - Среда: Laravel Sail (Docker Compose)
    - База данных: PostgreSQL 18-alpine (Внутренний порт 5432, внешний хост-порт 5433)
-   - Инструменты: Adminer (крутится в Docker на http://localhost:8090, смотрит на внутренний порт 8080)
+   - Инструменты: Adminer (в Docker на http://localhost:8090)
 
 2. ТЕКУЩАЯ ТЕМАТИКА:
-   - Интернет-магазин (Каталог товаров с фильтрацией и карточками)
+   - Интернет-магазин (Реализован каталог товаров с фильтрацией и интерактивная корзина в сессиях)
 
 3. АРХИТЕКТУРА И СТРУКТУРА БД:
-   - Модель Category (таблица `categories`)
-     * Поля: id, name, slug, timestamps
-   - Модель Product (таблица `products`)
-     * Поля: id, category_id (foreign key), name, description, price (в копейках, integer), quantity, timestamps
-   - Связи (Eloquent Relationships):
-     * Category HasMany Product
-     * Product BelongsTo Category
+   - Модель Category (таблица `categories`): id, name, slug, timestamps
+   - Модель Product (таблица `products`): id, category_id (FK), name, description, price (в копейках, integer), quantity, timestamps
+   - Связи: Category HasMany Product; Product BelongsTo Category
 
-4. СИДЕРЫ И ФАБРИКИ (Database Seeding):
-   - Настроена синхронная генерация: DatabaseSeeder создает 3 хардкод-категории и через ProductFactory наполняет каждую 5-ю случайными товарами. Полный сброс и накат работают через `migrate:fresh --seed`.
+4. РЕАЛИЗОВАННЫЙ ФУНКЦИОНАЛ И МАРШРУТЫ:
+   - GET `/` -> `ProductController@index` — Витрина товаров, GET-фильтрация по категориям/цене и сортировка.
+   - GET `/products/{id}` -> `ProductController@show` — Карточка товара с формой добавления.
+   - [НОВОЕ] Работа с корзиной (CartController):
+     * Данные хранятся в сессии в виде зашифрованного ассоциативного массива `$cart[$product_id] = ['name', 'quantity', 'price']`.
+     * GET `/cart` -> `CartController@index` — Страница корзины (cart.index), вывод списка товаров, расчет промежуточных сумм и итоговой цены (с переводом копеек в рубли).
+     * POST `/cart/add/{id}` -> `CartController@add` — Добавление товара или увеличение количества на +1 из каталога.
+     * POST `/cart/increase/{id}` -> `CartController@increase` — Кнопка [+] внутри корзины.
+     * POST `/cart/decrease/{id}` -> `CartController@decrease` — Кнопка [-] внутри корзины (при количестве 1 удаляет товар).
+     * DELETE `/cart/remove/{id}` -> `CartController@remove` — Кнопка [Удалить] для полного извлечения товара.
 
-5. РЕАЛИЗОВАННЫЙ ФУНКЦИОНАЛ И МАРШРУТЫ (routes/web.php):
-   - GET `/` -> `ProductController@index`
-     * Логика: Выводит витрину (catalog.blade.php) со списком всех категорий (сайдбар) и сеткой товаров.
-     * Фильтры: Комбинированная GET-фильтрация (по category_id, по макс. цене `price_max` и сортировка по цене `sort=price_asc/desc`). Параметры сохраняются в URL через `request()->fullUrlWithQuery()`.
-   - GET `/products/{id}` -> `ProductController@show`
-     * Логика: Динамический роут карточки товара. Использует `Product::findOrFail($id)` для отображения детальной страницы (product-detail.blade.php). Отдает 404 ошибку, если товара нет.
-
-6. ЧТО ПЛАНИРУЕТСЯ ДЕЛАТЬ СЛЕДУЮЩИМ ШАГОМ:
-   - Переход к реализации Корзины покупок (работа с Laravel Sessions).
-   - Оживление кнопки "Добавить в корзину" на странице товара, создание маршрута POST для добавления в сессию и страницы отображения корзины.
+5. НА ЧЕМ ОСТАНОВИЛИСЬ / ЧТО ДЕЛАТЬ СЛЕДУЮЩИМ ШАГОМ:
+   - Полностью завершен и протестирован интерактив корзины на сессиях.
+   - Следующий шаг — Переход к оформлению заказа (Checkout).
+   - Нужно создать модели Order и OrderItem, настроить миграции для хранения заказов в PostgreSQL, вывести форму ввода имени/телефона в корзине и написать логику сохранения данных из сессии в базу.
 ========================================================================
